@@ -423,6 +423,7 @@ def _classify_featureset(args):
     suffix = args.pop("suffix")
     log_path = args.pop("log_path")
     probability = args.pop("probability")
+    expected_value = args.pop('expected_value')
     results_path = args.pop("results_path")
     fixed_parameters = args.pop("fixed_parameters")
     sampler_parameters = args.pop("sampler_parameters")
@@ -485,8 +486,7 @@ def _classify_featureset(args):
         # featureset already exists if so, load it and then use it on test data
         modelfile = join(model_path, '{}.model'.format(job_name))
         if (task in ['cross_validate', 'learning_curve'] or
-            not exists(modelfile) or
-            overwrite):
+            not exists(modelfile) or overwrite):
             train_examples = _load_featureset(train_path, featureset, suffix,
                                               label_col=label_col,
                                               id_col=id_col,
@@ -501,6 +501,7 @@ def _classify_featureset(args):
             # initialize a classifer object
             learner = Learner(learner_name,
                               probability=probability,
+                              expected_value=expected_value,
                               feature_scaling=feature_scaling,
                               model_kwargs=fixed_parameters,
                               pos_label_str=pos_label_str,
@@ -854,7 +855,7 @@ def run_configuration(config_file, local=False, overwrite=True, queue='all.q',
     (experiment_name, task, sampler, fixed_sampler_parameters, feature_hasher,
      hasher_features, id_col, label_col, train_set_name, test_set_name, suffix,
      featuresets, do_shuffle, model_path, do_grid_search, grid_objectives,
-     probability, results_path, pos_label_str, feature_scaling,
+     probability, expected_value, results_path, pos_label_str, feature_scaling,
      min_feature_count, grid_search_jobs, grid_search_folds, cv_folds, save_cv_folds,
      do_stratified_folds, fixed_parameter_list, param_grid_list, featureset_names,
      learners, prediction_dir, log_path, train_path, test_path, ids_to_floats,
@@ -997,6 +998,7 @@ def run_configuration(config_file, local=False, overwrite=True, queue='all.q',
                 job_args["suffix"] = suffix
                 job_args["log_path"] = temp_logfile
                 job_args["probability"] = probability
+                job_args['expected_value'] = expected_value
                 job_args["results_path"] = results_path
                 job_args["sampler_parameters"] = (fixed_sampler_parameters
                                                   if fixed_sampler_parameters

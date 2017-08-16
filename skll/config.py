@@ -50,6 +50,7 @@ class SKLLConfigParser(configparser.ConfigParser):
         defaults = {'class_map': '{}',
                     'custom_learner_path': '',
                     'cv_folds_file': '',
+                    'expected_value': 'False',
                     'feature_hasher': 'False',
                     'feature_scaling': 'none',
                     'featuresets': '[]',
@@ -89,6 +90,7 @@ class SKLLConfigParser(configparser.ConfigParser):
         correct_section_mapping = {'class_map': 'Input',
                                    'custom_learner_path': 'Input',
                                    'cv_folds_file': 'Input',
+                                   'expected_value': 'Output',
                                    'feature_hasher': 'Input',
                                    'feature_scaling': 'Input',
                                    'featuresets': 'Input',
@@ -517,6 +519,8 @@ def _parse_config_file(config_path):
     # 3. Output
     probability = config.getboolean("Output", "probability")
 
+    expected_value = config.getboolean("Output", "expected_value")
+
     # do we want to keep the predictions?
     prediction_dir = _locate_file(config.get("Output", "predictions"),
                                   config_dir)
@@ -614,8 +618,8 @@ def _parse_config_file(config_path):
     return (experiment_name, task, sampler, fixed_sampler_parameters,
             feature_hasher, hasher_features, id_col, label_col, train_set_name,
             test_set_name, suffix, featuresets, do_shuffle, model_path,
-            do_grid_search, grid_objectives, probability, results_path,
-            pos_label_str, feature_scaling, min_feature_count,
+            do_grid_search, grid_objectives, probability, expected_value,
+            results_path, pos_label_str, feature_scaling, min_feature_count,
             grid_search_jobs, grid_search_folds, cv_folds, save_cv_folds,
             do_stratified_folds, fixed_parameter_list, param_grid_list,
             featureset_names, learners, prediction_dir, log_path, train_path,

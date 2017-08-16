@@ -556,12 +556,13 @@ class Learner(object):
 
     def __init__(self, model_type, probability=False, feature_scaling='none',
                  model_kwargs=None, pos_label_str=None, min_feature_count=1,
-                 sampler=None, sampler_kwargs=None, custom_learner_path=None):
+                 sampler=None, sampler_kwargs=None, custom_learner_path=None,
+                 expected_value=False):
         """
         Initializes a learner object with the specified settings.
         """
         super(Learner, self).__init__()
-
+        self.logger = logging.getLogger(__name__)
         self.feat_vectorizer = None
         self.scaler = None
         self.label_dict = None
@@ -596,6 +597,16 @@ class Learner(object):
         self._probability = None
         # Use setter to set self.probability
         self.probability = probability
+
+        self.expected_value = expected_value
+        if self.expected_value:
+            if self.model_type._estimator_type == 'Regressor':
+                self.logger.warning("You cannot set 'expected_value' "
+                                  "for a regressor. Turning option off.")
+                self.expected_value = False
+            else:
+                self.probability = True
+
         self._use_dense_features = \
             (issubclass(self._model_type, _REQUIRES_DENSE) or
              self._feature_scaling in {'with_mean', 'both'})
@@ -1195,7 +1206,7 @@ class Learner(object):
             ytest = examples.labels
 
         # if run in probability mode, convert yhat to list of labels predicted
-        if self.probability:
+        if self.probability and not self.expected_value:
             # if we're using a correlation grid objective, calculate it here
             if grid_objective and grid_objective in _CORRELATION_METRICS:
                 try:
@@ -1343,10 +1354,14 @@ class Learner(object):
 
         # make the prediction on the test data
         try:
-            yhat = (self._model.predict_proba(xtest)
-                    if (self.probability and
-                        not class_labels)
-                    else self._model.predict(xtest))
+            if self.expected_value:
+                yhat = [round(np.dot(class_probs, self.label_list), 0)
+                        for class_probs in self._model.predict_proba(xtest)]
+            else:
+                yhat = (self._model.predict_proba(xtest)
+                        if (self.probability and
+                            not class_labels)
+                        else self._model.predict(xtest))
         except NotImplementedError as e:
             logger.error("Model type: %s\nModel: %s\nProbability: %s\n",
                          self._model_type, self._model, self.probability)
@@ -1360,14 +1375,14 @@ class Learner(object):
                 # header
                 if not append:
                     # Output probabilities if we're asked (and able)
-                    if self.probability:
+                    if self.probability and not self.expected_value:
                         print('\t'.join(["id"] +
                                         [str(x) for x in self.label_list]),
                               file=predictionfh)
                     else:
                         print('id\tprediction', file=predictionfh)
 
-                if self.probability:
+                if self.probability and not self.expected_value:
                     for example_id, class_probs in zip(example_ids, yhat):
                         print('\t'.join([str(example_id)] +
                                         [str(x) for x in class_probs]),
