@@ -602,7 +602,7 @@ class Learner(object):
         if self.expected_value:
             if self.model_type._estimator_type == 'Regressor':
                 self.logger.warning("You cannot set 'expected_value' "
-                                  "for a regressor. Turning option off.")
+                                    "for a regressor. Turning option off.")
                 self.expected_value = False
             else:
                 self.probability = True
@@ -1355,8 +1355,11 @@ class Learner(object):
         # make the prediction on the test data
         try:
             if self.expected_value:
-                yhat = [round(np.dot(class_probs, self.label_list), 0)
-                        for class_probs in self._model.predict_proba(xtest)]
+                yhat = []
+                for class_probs in self._model.predict_proba(xtest):
+                    ev = round(sum([self.label_list[i] * p
+                                    for i, p in enumerate(class_probs)]))
+                    yhat.append(ev)
             else:
                 yhat = (self._model.predict_proba(xtest)
                         if (self.probability and
