@@ -562,7 +562,6 @@ class Learner(object):
         Initializes a learner object with the specified settings.
         """
         super(Learner, self).__init__()
-        self.logger = logging.getLogger(__name__)
         self.feat_vectorizer = None
         self.scaler = None
         self.label_dict = None
@@ -601,6 +600,7 @@ class Learner(object):
         self.expected_value = expected_value
         if self.expected_value:
             if self.model_type._estimator_type == 'Regressor':
+                logger = logging.getLogger(__name__)
                 self.logger.warning("You cannot set 'expected_value' "
                                     "for a regressor. Turning option off.")
                 self.expected_value = False
